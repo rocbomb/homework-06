@@ -3,6 +3,7 @@
  *  1996.11		xinz	written in Java
  *  2001.3		xinz	port to C#
  *  2001.5.10	xinz	file parsing, back/forward
+ *  2013.11.25  roc     homework-06
  */
 
 using System;
@@ -23,40 +24,36 @@ namespace Go_WinApp
 	}
 
 
-	/**
-	 * ZZ ZZZZZ
-	 */
 	public class GoBoard : System.Windows.Forms.Form
 	{
-		string [] strLabels; // {"Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z","Z"};
+		string [] strLabels; //棋盘上标
 
-		int nSize;		                //ZZZZ ZZ ZZZ ZZZZZ, ZZZZZZZ ZZ 19
-		const int nBoardMargin = 10;	//ZZZZZZ ZZ ZZZ ZZZZ ZZ ZZZ ZZZZZ
+		int nSize;		                //棋盘是几X几的  19X19
+		const int nBoardMargin = 10;	//边界余量
 		int nCoodStart = 4;
 		const int	nBoardOffset = 20;
 		int nEdgeLen = nBoardOffset + nBoardMargin;
-		int nTotalGridWidth = 360 + 36;	//ZZZ ZZZZZ ZZZZZ ZZ ZZZZZ ZZZZ
-		int nUnitGridWidth = 22;		//ZZZ ZZZZZ ZZ ZZZZ ZZZZ
-		int nSeq = 0;
-		Rectangle rGrid;		    //ZZZ ZZZZ ZZZZ
-		StoneColor m_colorToPlay;   //ZZZZZ ZZZZZ ZZZZZZ ZZZZ. 
-		GoMove m_gmLastMove;	    //ZZZ ZZZZ ZZZZ, 
-		Boolean bDrawMark;	        //ZZZZZZZ ZZ ZZZ ZZ ZZZZ ZZZ ZZZZ. 
-		Boolean m_fAnyKill;	        //ZZZZZZZZ ZZZ ZZZZZZZZ ZZ ZZZ ZZZZ ZZZZ
-		Spot [,] Grid;		        //ZZZZZ ZZZZ ZZ ZZZ ZZZZZ
+		int nTotalGridWidth = 360 + 36;	//棋盘内部格子总长度
+		int nUnitGridWidth = 22;		//每个格边长
+		int nSeq = 0;  //步数
+		Rectangle rGrid;		    //棋盘
+		StoneColor m_colorToPlay;   //当前下的颜色
+		GoMove m_gmLastMove;	    //最近一次下的旗子
+		Boolean bDrawMark;	        //画图标志
+		Boolean m_fAnyKill;	        //棋子消除标志
+        Spot[,] Grid;		        //交叉点
 		Pen penGrid, penStoneW, penStoneB,penMarkW, penMarkB;
 		Brush brStar, brBoard, brBlack, brWhite, m_brMark;
 	
-        // ZZZZ ZZZZZZZZZ
-        int nFFMove = 10;   //ZZ ZZZZ ZZZ ZZZZ 10 ZZZZZ. 
-        int nRewindMove = 10;  // ZZZZZZ; 
+
+        int nFFMove = 10;   //">>"按钮恢复10个棋子 
+        int nRewindMove = 10;  // 未被使用 
 
 		GoTree	gameTree;
 
-		/// <ZZZZZZZ>
-		///    ZZZZZZZZ ZZZZZZZZ ZZZZZZZZ.
-		/// </ZZZZZZZ>
-		private System.ComponentModel.Container components;
+        //
+		// C#的控件
+        //
 		private System.Windows.Forms.TextBox textBox1;
 		private System.Windows.Forms.Button Rewind;
 		private System.Windows.Forms.Button FForward;
@@ -67,17 +64,12 @@ namespace Go_WinApp
 
 		public GoBoard(int nSize)
 		{
-			//
-			// ZZZZZZZZ ZZZ ZZZZZZZ ZZZZ ZZZZZZZZ ZZZZZZZ
-			//
+            //一大波Component初始化
 			InitializeComponent();
 
-			//
-			// ZZZZ: ZZZ ZZZ ZZZZZZZZZZZ ZZZZ ZZZZZ ZZZZZZZZZZZZZZZZZZZ ZZZZ
-			//
+			this.nSize = nSize;  //初始化棋盘大小
 
-			this.nSize = nSize;  //ZZZZZZZZZ ZZZZ.
-
+            //黑棋先下
 			m_colorToPlay = StoneColor.black;
 
 			Grid = new Spot[nSize,nSize];
@@ -101,10 +93,7 @@ namespace Go_WinApp
 			gameTree = new GoTree();
 		}
 
-		/// <ZZZZZZZ>
-		///    ZZZZZZZZ ZZZZZZ ZZZ ZZZZZZZZ ZZZZZZZ - ZZ ZZZ ZZZZZZ
-		///    ZZZ ZZZZZZZZ ZZ ZZZZ ZZZZZZ ZZZZ ZZZ ZZZZ ZZZZZZ.
-		/// </ZZZZZZZ>
+		//初始化界面吧
 		private void InitializeComponent()
 		{
             this.Open = new System.Windows.Forms.Button();
@@ -116,7 +105,7 @@ namespace Go_WinApp
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
-            // ZZZZ
+            // Open
             // 
             this.Open.Location = new System.Drawing.Point(445, 88);
             this.Open.Name = "Open";
@@ -125,7 +114,7 @@ namespace Go_WinApp
             this.Open.Text = "open";
             this.Open.Click += new System.EventHandler(this.Open_Click);
             // 
-            // ZZZZ
+            // Save
             // 
             this.Save.Location = new System.Drawing.Point(509, 88);
             this.Save.Name = "Save";
@@ -134,7 +123,7 @@ namespace Go_WinApp
             this.Save.Text = "save";
             this.Save.Click += new System.EventHandler(this.Save_Click);
             // 
-            // ZZZZZZ
+            // Rewind
             // 
             this.Rewind.Location = new System.Drawing.Point(509, 56);
             this.Rewind.Name = "Rewind";
@@ -143,7 +132,7 @@ namespace Go_WinApp
             this.Rewind.Text = "<<";
             this.Rewind.Click += new System.EventHandler(this.Rewind_Click);
             // 
-            // ZZZZZZZ
+            // Forward
             // 
             this.Forward.Location = new System.Drawing.Point(445, 24);
             this.Forward.Name = "Forward";
@@ -152,7 +141,7 @@ namespace Go_WinApp
             this.Forward.Text = ">";
             this.Forward.Click += new System.EventHandler(this.Forward_Click);
             // 
-            // ZZZZ
+            // Back
             // 
             this.Back.Location = new System.Drawing.Point(509, 24);
             this.Back.Name = "Back";
@@ -161,7 +150,7 @@ namespace Go_WinApp
             this.Back.Text = "<";
             this.Back.Click += new System.EventHandler(this.Back_Click);
             // 
-            // ZZZZZZZZ
+            // FForward
             // 
             this.FForward.Location = new System.Drawing.Point(445, 56);
             this.FForward.Name = "FForward";
@@ -170,7 +159,7 @@ namespace Go_WinApp
             this.FForward.Text = ">>";
             this.FForward.Click += new System.EventHandler(this.FForward_Click);
             // 
-            // ZZZZZZZ1
+            // textBox1
             // 
             this.textBox1.Location = new System.Drawing.Point(447, 128);
             this.textBox1.Multiline = true;
@@ -180,7 +169,7 @@ namespace Go_WinApp
             this.textBox1.Text = "please oepn a .sgf file to view, or just play on the board";
             this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
-            // ZZZZZZZ
+            //组织元件
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
             this.AutoScroll = true;
@@ -256,17 +245,18 @@ namespace Go_WinApp
 
 		private void showGameInfo()
 		{
-			//ZZZZ ZZZ ZZZZZZZZZZZ ZZ ZZZZ ZZZZ, ZZ ZZZ
+			//文本框更新
 			textBox1.Clear();
 			textBox1.AppendText(gameTree.Info);
 		}
 
 		protected void Back_Click (object sender, System.EventArgs e)
 		{
-			GoMove gm = gameTree.doPrev();	//ZZZZ ZZZ ZZZZZ ZZZZ ZZZZZZ ZZZZZZZ ZZZZ
+			GoMove gm = gameTree.doPrev();	//记录刚下的棋子
             if (null != gm)
             {
                 playPrev(gm);
+				showGameInfo();
             }
             else
             {
@@ -293,8 +283,7 @@ namespace Go_WinApp
 			return p;
 		}
 
-		//ZZ ZZZ ZZ Z ZZZZZZZZ ZZZZZ (Z,Z) ZZ ZZZZZZ ZZZZZZ ZZZ ZZZZZZZZZ ZZ 
-		//ZZ ZZZZZ ZZZZZ Z. (Z.Z. ZZZZZZ 1/3 ZZ ZZZZZZZZZZZZZZ
+		//坐标接近交叉点返回真
 		private Boolean closeEnough(Point p, int x, int y)
 		{
 			if (x < rGrid.X+nUnitGridWidth*p.X-nUnitGridWidth/3 ||
@@ -307,21 +296,19 @@ namespace Go_WinApp
 			else 
 				return true;
 		}
-        /// <ZZZZZZZ>
-        /// 
-        /// </ZZZZZZZ>
-        /// <ZZZZZ ZZZZ="ZZZZZZ"></ZZZZZ>
-        /// <ZZZZZ ZZZZ="Z"></ZZZZZ>
+        ///鼠标点击处理
 		private void MouseUpHandler(Object sender,MouseEventArgs e)
 		{
 			Point p;
 			GoMove	gmThisMove;
 
 			p = PointToGrid(e.X,e.Y);
-			if (!onBoard(p.X, p.Y) || !closeEnough(p,e.X, e.Y)|| Grid[p.X,p.Y].hasStone())
-				return; //ZZZZZZ ZZZZ Z ZZZZ ZZZZZ.
 
-			//ZZZZZ ZZZZ ZZ Z ZZZZZZ ZZZZ, ZZ ZZZZ ZZ ZZZ ZZZ ZZZZ ZZ ZZZ ZZZZ ZZZZ
+            //是否可以下子   在棋盘内  点击接近交叉点  点上没棋子
+			if (!onBoard(p.X, p.Y) || !closeEnough(p,e.X, e.Y)|| Grid[p.X,p.Y].hasStone())
+				return; 
+
+			//可一下子  先生成一步  然后play 并在Tree上记录
 			gmThisMove = new GoMove(p.X, p.Y, m_colorToPlay, 0);
 			playNext(ref gmThisMove);
 			gameTree.addMove(gmThisMove);
@@ -330,9 +317,9 @@ namespace Go_WinApp
 		public void playNext(ref GoMove gm) 
 		{
 			Point p = gm.Point;
-			m_colorToPlay = gm.Color;	//ZZZ ZZZZZ, ZZZZZZZZZ ZZZZ ZZZZZZ ZZZZ ZZZZ ZZZZ.
+			m_colorToPlay = gm.Color;	//当前颜色为当前棋子的颜色
 
-			//ZZZZZ ZZZ ZZZZZ/ZZZZZZ ZZ ZZZZZZZ ZZZZZZZZZ
+			//清除所有的label mark
 			clearLabelsAndMarksOnBoard(); 
 			
 			if (m_gmLastMove != null)
@@ -341,15 +328,16 @@ namespace Go_WinApp
 			bDrawMark = true;
 			Grid[p.X,p.Y].setStone(gm.Color);
 			m_gmLastMove = new GoMove(p.X, p.Y, gm.Color, nSeq++);
-			//ZZZ ZZZZZ/ZZZZ
+			//重新画出marks labels
 			setLabelsOnBoard(gm);
 			setMarksOnBoard(gm);
 			
 			doDeadGroup(nextTurn(m_colorToPlay));
-			//ZZ ZZZ ZZZZZ ZZZ ZZZZ, ZZ ZZZZ ZZ ZZZZZZZZ ZZZZ, ZZ ZZZZ ZZ ZZZ ZZZZZZZ ZZZZ ZZ ZZZZZZZZ. 
+			
+            //处理对面有死棋
 			if (m_fAnyKill)
-				appendDeadGroup(ref gm, nextTurn(m_colorToPlay));
-			else //ZZZZ ZZ ZZZ ZZ ZZ'Z Z ZZZZZZZ
+				appendDeadGroup(ref gm, nextTurn(m_colorToPlay)); //记录死棋
+			else //检查自己有没有脑残到自己下出无气棋子
 			{
 				doDeadGroup(m_colorToPlay);
 				if (m_fAnyKill)
@@ -359,10 +347,10 @@ namespace Go_WinApp
 			
 			optRepaint();
 
-			//ZZZZZZ ZZZZZ
+			//对方下了
 			m_colorToPlay = nextTurn(m_colorToPlay);
 			
-			//ZZZZ ZZZ ZZZZZZZ, ZZ ZZZ
+			//更新注释
 			textBox1.Clear();
 			textBox1.AppendText(gm.Comment);
 		}
@@ -393,15 +381,30 @@ namespace Go_WinApp
 		}
 
 		/*
-		 * ZZZZ ZZZ ZZZZ ZZ ZZZZ ZZZ ZZZZ ZZZZZZZZZ ZZ ZZZZ ZZZZZZ ZZZZ ZZZZ ZZ ZZZZZZ. 
-		 * ZZZZ ZZ ZZ:
-		 * 	1. ZZZZZZ ZZZ ZZZZZZZ ZZZZ ZZZZ ZZZ ZZZZZ
-		 *  1.1 ZZZZ ZZZZZZ ZZZ "ZZZZZZZZ" ZZZZZZZZZZ
-		 *	2. store the stones got killed by current move
-		 *  3. ZZZZZZZZZZ ZZZ ZZZ "ZZZZZZZZ"
+		 * 悔棋一样的~
 		 */
 		public void playPrev(GoMove gm)
 		{
+            Point a = gm.Point;
+
+            //先移除该棋子
+			Grid[a.X,a.Y].removeStone();
+
+			m_gmLastMove = gameTree.peekPrev();
+			if (m_gmLastMove != null)
+				Grid[m_gmLastMove.Point.X,m_gmLastMove.Point.Y].setUpdated();
+
+			//判断是否有死棋  且不是自己作死的棋
+            if (gm.DeadGroup != null && gm.DeadGroupColor != gm.Color)
+			{
+                foreach (Point p in gm.DeadGroup)
+				{
+					Grid[p.X,p.Y].setNoKilled();
+                    Grid[p.X, p.Y].setStone(gm.DeadGroupColor);
+				}
+			}
+
+			optRepaint();
             return; 
         }
 
@@ -415,7 +418,7 @@ namespace Go_WinApp
 		}
 
 		/**
-		 * ZZZZZZZZ ZZZ ZZZZZZZ ZZZZ, ZZZZ ZZZZZZZ ZZZ ZZZZZZZ ZZZZZ ZZ ZZZ ZZZZZ
+		 * 更新画面
 		 */
 		private void optRepaint()
 		{
@@ -433,7 +436,7 @@ namespace Go_WinApp
 		}
 
 		/*
-		 * ZZZZZZZ ZZZZ ZZZ ZZZZ ZZ ZZZ ZZZZZ ZZZZZZZ 
+		 * 重画一个格子
 		 */
 		void repaintOneSpotNow(Point p)
 		{
@@ -445,11 +448,9 @@ namespace Go_WinApp
 			bDrawMark = true;
 		}
 
-		//ZZZZ ZZ ZZZZZZZZ ZZ ZZZZZZZ ZZZ ZZZ ZZZZ ZZZZ ZZZZ.  
 		void recordMove(Point p, StoneColor colorToPlay) 
 		{
 			Grid[p.X,p.Y].setStone(colorToPlay);
-			// ZZZZZZ ZZZZ ZZZZ.
 			m_gmLastMove = new GoMove(p.X, p.Y, colorToPlay, nSeq++);
 		}
 
@@ -462,8 +463,8 @@ namespace Go_WinApp
 		}
 
 		/**
-		 *	bury the dead stones in a group (same color). 
-		 *	if a stone in one group is dead, the whole group is dead.
+		 *	递归程序
+		 *	一块相连的死棋都会死
 		*/
 		void buryTheDead(int i, int j, StoneColor c) 
 		{
@@ -487,7 +488,7 @@ namespace Go_WinApp
 		}
 
 		/**
-		 * ZZZZZZ ZZZ ZZZZ ZZZZZ ZZZ ZZZZZ ZZZZ ZZZZ ZZZ ZZZZZ.
+		 * 查找死棋块
 		 */
 		void doDeadGroup(StoneColor c) 
 		{
@@ -508,11 +509,11 @@ namespace Go_WinApp
 
 
 		/**
-		 * ZZZZZZZZZ ZZZ ZZZZZZZ ZZ ZZZ ZZZZZ, ZZZZZZZZ ZZZZ ZZZ ZZZZZ.
+		 * 气的递归计算
 		 */
 		int calcLiberty(int x, int y, StoneColor c) 
 		{
-			int lib = 0; // ZZZZZZZ	
+			int lib = 0; 	
 			
 			if (!onBoard(x,y))
 				return 0;
@@ -523,7 +524,7 @@ namespace Go_WinApp
 			{
 				if (Grid[x,y].color() == c) 
 				{
-					//ZZZ ZZZZZZZZZZ ZZZ ZZZZZZZ ZZZZZ.
+					//现将自己标记起来  然后递归。。。。
 					Grid[x,y].setScanned();
 					lib += calcLiberty(x-1, y, c);
 					lib += calcLiberty(x+1, y, c);
@@ -534,7 +535,7 @@ namespace Go_WinApp
 					return 0;
 			} 
 			else 
-			{// ZZZZ ZZ ZZZZZ ZZZ ZZZZZZZZZ. 
+			{// 找到气 标记防止重复查找
 				lib ++;
 				Grid[x,y].setScanned();
 			}
@@ -543,9 +544,7 @@ namespace Go_WinApp
 		}
 
 
-		/**
-		 * ZZZZ ZZZ ZZZZ ZZZZ
-		 */
+
 		void markLastMove(Graphics g) 
 		{
 			Brush brMark;
@@ -613,9 +612,9 @@ namespace Go_WinApp
 
 		private void DrawBoard(Graphics g)
 		{
-			//ZZZZZ ZZZ ZZZ ZZZZ ZZZ ZZZZZZZZZZZ
+			//画棋盘的标格
 			string[] strV= {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19"};
-			string [] strH= {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T"};
+			string[] strH= {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T"};
 
 			Point p1 = new Point(nEdgeLen,nEdgeLen);
 			Point p2 = new Point(nTotalGridWidth+nEdgeLen,nEdgeLen);
@@ -630,7 +629,6 @@ namespace Go_WinApp
 				p1.Y += nUnitGridWidth;
 				p2.Y += nUnitGridWidth;
 			}
-			//ZZZZ ZZZ ZZZZ ZZ ZZZ ZZZZZ
 			Pen penHi = new Pen(Color.WhiteSmoke, (float)0.5);
 			Pen penLow = new Pen(Color.Gray, (float)0.5);
 
@@ -644,14 +642,14 @@ namespace Go_WinApp
 		{
 			DrawBoard(e.Graphics);
 			
-			//ZZZZ ZZZZ-ZZZZZ. 
+			//画八颗星 一颗天元
 			drawStars(e.Graphics);
 
-			//ZZZZ ZZZZZZ
+			//画棋子
 			drawEverySpot(e.Graphics);
 		}
 
-		//ZZZZ ZZZ ZZZZ ZZ ZZZZZZZZ ZZZZZZZZ
+        //画八颗星 一颗天元
 		void drawStar(Graphics g, int row, int col) 
 		{
 			g.FillRectangle(brStar,
@@ -661,7 +659,7 @@ namespace Go_WinApp
 				3);
 		}
 
-		//ZZZZ 9 ZZZZZ ZZZ ZZZZZZZ ZZZZ 19Z19. 
+		//星星和天元位置
 		void  drawStars(Graphics g)
 		{
 			drawStar(g, 4, 4);
@@ -676,7 +674,7 @@ namespace Go_WinApp
 		}
 
 		/**
-		 * ZZZZ Z ZZZZZ (ZZZZZ/ZZZZZ) ZZ ZZZZZZZZ ZZZZZZZZ.
+		 * 画棋子
 		 */
 		void drawStone(Graphics g, int row, int col, StoneColor c) 
 		{
@@ -699,9 +697,9 @@ namespace Go_WinApp
 			if (nLabel ==0)
 				return;
 			nLabel --;
-			nLabel %= 18;			//ZZZZZZZZ ZZZZZ.
+            nLabel %= 18;
 
-			//ZZZZZ ZZZ ZZ
+			//画标签
 			Rectangle r = new Rectangle(rGrid.X+ x * nUnitGridWidth - (nUnitGridWidth-1)/2, 
 				rGrid.Y + y * nUnitGridWidth - (nUnitGridWidth-1)/2,
 				nUnitGridWidth-1,
@@ -709,7 +707,7 @@ namespace Go_WinApp
 
 			g.FillEllipse(brBoard, r);
 
-			g.DrawString(strLabels[nLabel],	//ZZZZZZ ZZZZZZ ZZZZ 1, ZZZ ZZZ ZZZZZZ ZZZZZZ ZZZZ 0.
+			g.DrawString(strLabels[nLabel],	//标记出来,用某个字母.
 				this.Font, 
 				brBlack, 
 				rGrid.X+ (x) * nUnitGridWidth - (nUnitGridWidth-1)/4, 
@@ -736,12 +734,14 @@ namespace Go_WinApp
 					if (Grid[i,j].hasMark())
 						drawMark(g, i, j);
 				}
-			//ZZZZZZZZZ ZZZZ ZZZZ. 
+
 			if (bDrawMark && m_gmLastMove != null)
+				{
 				markLastMove(g);
+				}
 		}
 
-		//ZZZZ Z ZZZZ ZZZZ
+		//打开棋谱
 		private void OpenFile()
 		{
 			OpenFileDialog openDlg = new OpenFileDialog();
@@ -774,9 +774,7 @@ namespace Go_WinApp
 
 	public class GoTest
 	{
-		/// <ZZZZZZZ>
-		/// ZZZ ZZZZ ZZZZZ ZZZZZ ZZZ ZZZ ZZZZZZZZZZZ.
-		/// </ZZZZZZZ>
+		///测试吧
         [STAThread]
 		public static void Main(string[] args) 
 		{
@@ -785,7 +783,7 @@ namespace Go_WinApp
 	}
 
 	
-	//ZZZZ ZZZZZZZZZZZZ ZZ ZZZ ZZZZ ZZ ZZZ ZZZZZ
+	//每个棋盘点
 	public class Spot 
 	{
 		private Boolean bEmpty;
@@ -794,9 +792,9 @@ namespace Go_WinApp
 		private short	m_nLabel;
 		private Boolean m_bMark;
 		private Boolean bScanned;
-		private Boolean bUpdated; //ZZ ZZZ ZZZZ ZZ ZZZZZZZ. (ZZZ ZZZZ/ZZZZ ZZZZZ/ZZZZZZ ZZZZZ)
+		private Boolean bUpdated; //更新标志
 		/**
-		 * ZZZZZZZZZZZ.
+		 * 初始化棋盘点
 		 */
 		public Spot() 
 		{
@@ -830,19 +828,19 @@ namespace Go_WinApp
 				bEmpty = false;
 				s.color = c;
 				bUpdated = true;
-			} // ZZZZ ZZZZZZ ZZZZZZZZ. 
+			} // 设置当前棋盘点颜色为c,标记其非空且已更新. 
 		}
 
 		/*
-		 * ZZZZZZ Z ZZZZZ ZZZZ ZZZ ZZZZZZZZ
+		 * 移除棋子
 		*/
 		public void removeStone()
-		{	//ZZZZZZ ZZZZZZ !ZZZZZZ
+		{	//移除棋子
 			bEmpty = true;
 			bUpdated = true;
 		}
 				
-		//ZZ ZZZZ ZZZZ ZZZZZ ZZZZZZZZZZZZZ ZZZZZZ ZZZ ZZZZ ZZZZZ Z.
+		//设定棋子已死
 		public void die() 
 		{
 			bKilled = true;
@@ -855,11 +853,11 @@ namespace Go_WinApp
 
 		public void resetUpdated() { bUpdated = false; bKilled = false;}
 
-		//ZZ ZZZ ZZZZZZZ ZZZZZZZZZ ZZZZ ZZZZZZ (ZZZZZZZ)? 
+		//判断棋子是否需要更新
 		public Boolean isUpdated() 
 		{ 
 			if (bUpdated)
-			{	//ZZZZ ZZ ZZZZ ZZZ ZZZZZZ ZZZZZZZZZ ZZZ ZZZ ZZZZ ZZZZZZ
+			{	//如果需要更新
 				bUpdated = false;
 				return true;
 			} 
@@ -867,30 +865,28 @@ namespace Go_WinApp
 				return false;
 		}
 
-		// ZZZZZ Z ZZZZ ZZ ZZ ZZZZZZZZZ, ZZZZ ZZ ZZZZZZZZ ZZZ ZZZZZ ZZZZ.
+		// 设置需要更新
 		public void setUpdated() { bUpdated = true; }
 	}
 
 	/**
-	 * Z ZZZZ ZZ Z ZZ ZZZZ.
+	 * 棋步
 	 */
 	public class GoMove 
 	{
-		StoneColor m_c;	//ZZZZZ/ZZZZZ
-		Point m_pos;		//ZZZZZZZZZZZ ZZ ZZZ ZZZZ.
-		int m_n;			//ZZZZZZZZ ZZ ZZZ ZZZZZZZZZ.
-		String m_comment;	//ZZZZZZZZ.
-		MoveResult m_mr;	//ZZZZ'Z ZZZZZZ. 
+		StoneColor m_c;	    //颜色
+		Point m_pos;		//位置
+		int m_n;			//步数
+		String m_comment;	//注释
+		MoveResult m_mr;	//没用啊
 
-		ArrayList		m_alLabel; //ZZZ ZZZZZ ZZ ZZZZ ZZZZ. 
-		ArrayList		m_alMark; //ZZZZ
+		ArrayList		m_alLabel; 
+		ArrayList		m_alMark;
 
-		//ZZZ ZZZZZ ZZ ZZZZ ZZZZZZ ZZZZZZ ZZ ZZZZ ZZZZ
-		//ZZ ZZZZZ ZZ ZZZ ZZZZ ZZZZZ (ZZ ZZZ ZZZZZZ ZZZZ ZZZZ ZZ ZZZZZZZ). 
-		ArrayList		m_alDead;
-		StoneColor	m_cDead;
+		ArrayList		m_alDead;  //死棋
+		StoneColor	    m_cDead;
 		/**
-		 * ZZZZZZZZZZZ.
+		 * 构造 初始化
 		 */
 		public GoMove(int x, int y, StoneColor sc, int seq) 
 		{
@@ -907,7 +903,7 @@ namespace Go_WinApp
 			char cx = str[0];
 			char cy = str[1];
 			m_pos = new Point(0,0);
-			//ZZZ Z# ZZ ZZZ ZZZZZZZZZ - 
+			//字符串构造类
 			m_pos.X = (int) ( (int)cx - (int)(char)'a');
 			m_pos.Y = (int) ( (int)cy - (int)(char)'a');
 			this.m_c = c;
@@ -921,7 +917,6 @@ namespace Go_WinApp
 			Point p = new Point(0,0);
 			char cx = str[0];
 			char cy = str[1];
-			//ZZZ Z# ZZ ZZZ ZZZZZZZZZ - 
 			p.X = (int) ( (int)cx - (int)(char)'a');
 			p.Y = (int) ( (int)cy - (int)(char)'a');
 			return p;
@@ -994,18 +989,18 @@ namespace Go_WinApp
 	
 
 	/**
-	 * ZZZZZZZZZZ - ZZZ ZZZZZZ ZZ ZZZ 4 ZZZZZZZZZZZ ZZZZZZZZZ ZZZZ Z ZZZZ ZZ ZZZZZZ.
+	 * 没用过，就不写了
 	 * 
 	 */
 	public class MoveResult 
 	{
 		public StoneColor color; 
-		// 4 ZZZZZZZZ ZZZZZZ ZZZZZ ZZ ZZZZZZZZ. 
+
 		public Boolean bUpKilled;
 		public Boolean bDownKilled;
 		public Boolean bLeftKilled;
 		public Boolean bRightKilled;
-		public Boolean bSuicide;	//ZZ ZZZ ZZZZ Z ZZZZZZZ?
+		public Boolean bSuicide;
 		public MoveResult() 
 		{
 			bUpKilled = false;
@@ -1017,8 +1012,7 @@ namespace Go_WinApp
 	}
 
 	/**
-	 * ZZZZZ. 
-	 * ZZZZZ ZZZ ZZZ ZZZZZZZZ ZZZZZ, ZZZZZ ZZZ ZZZZZ. 
+	 * 棋子类 
 	 */
 	public struct Stone 
 	{
@@ -1026,19 +1020,17 @@ namespace Go_WinApp
 	}
 
 	/**
-	 * Z ZZZZZZZZZ ZZ Z ZZ ZZZZ.
-	 * ZZZZZZZZZZ: ZZZ ZZZZ ZZZZ ZZZZZZ ZZZ ZZ 0. 
+	 * 棋步记录
 	 */
 	public class GoVariation 
 	{
-		int m_id;			//ZZZZZZZZZ ZZ. 
-		string m_name;	//ZZZZZZZZZ ZZZZ. (ZZZZ.5, ZZZ.9, "ZZZZZ ZZZZZZ", ZZZ).
-		//ZZZZZZZZZZZZZ ZZZ;	//ZZZZZZZZZ ZZZZZZZZ ZZZZZ.	
+		int m_id; 
+	
 		ArrayList m_moves; 
-		int m_seq;			//ZZZZZZ ZZZ ZZZ ZZ ZZZZ ZZZZ. 
-		int m_total;
+		int m_seq;			 
+		int m_total;		
 
-		//ZZZZZZZZZZZ. 
+
 		public GoVariation(int id)
 		{
 			m_id = id;
@@ -1076,9 +1068,7 @@ namespace Go_WinApp
 				return null;
 		}
 
-		/*
-		 *  ZZZZ ZZZZZZ ZZZ ZZZZZZZZ ZZZZ, ZZ ZZZZZZ ZZZZZZ ZZ ZZZ ZZZZZZZZ.
-		 */
+
 		public GoMove peekPrev()
 		{
 			if (m_seq > 0)
@@ -1091,10 +1081,7 @@ namespace Go_WinApp
 	}
 
 
-	/**
-	* ZZ: ZZZ ZZ ZZ Z ZZZZZZZZZ ZZZZZ ZZZZ ZZZ ZZZZZZZ ZZZZ. 
-	* ZZZ: ZZZ ZZZZ ZZ Z ZZZZZZZZZ ZZZZZ ZZZZZZZ ZZZZ. 
-	*/
+
 	struct VarStartPoint
 	{
 		int m_id; 
@@ -1116,8 +1103,8 @@ namespace Go_WinApp
         public string handicap;
         public string gameEvent;
         public string location;
-        public string time;             // ZZZZZ ZZZZZ ZZZZ ZZZZZ ZZ ZZZ ZZZZ. 
-        public string unknown_ff;   //ZZZZZZZ ZZZZZZZZZZ. 
+        public string time;      
+        public string unknown_ff;  	 	
         public string unknown_gm;
         public string unknown_vw; 
 	}
@@ -1136,11 +1123,11 @@ namespace Go_WinApp
 				return strOut;
 			for (iSlash = strOut.Length-2; iSlash>=0; iSlash--)
 			{
-				if (strOut[iSlash] == '\\')		// && ZZZZZZ[ZZZZZZ+1] == ']')
+				if (strOut[iSlash] == '\\')
 				{
 					strOut = strOut.Remove(iSlash,1);
 					if (iSlash>0)
-						iSlash --;	//ZZZZ ZZ ZZZZ ZZZZZZZZZ ZZZZZ ZZ ZZZZZZ ZZZ ZZZZZ
+						iSlash --;
 				}
 			}
 			return strOut;
@@ -1152,20 +1139,19 @@ namespace Go_WinApp
 			string strOneVal;
 			int		iBegin, iEnd;
 		
-			//ZZZZ ZZ ZZZZZ ZZZZ ZZZZZ
+
 			alV = new ArrayList(1);
 
-			//ZZZZZZZ ZZZZ ZZZ ZZZZZZZ Z[ZZZZZZZ]
 			if (k.Equals("C"))
 			{
 				strOneVal = removeBackSlash(string.Copy(v));
-				//ZZZ ZZZ ZZ '\'
+
 				alV.Add(strOneVal);
 				return;
 			}
 
 			iBegin = v.IndexOf("[");
-			if (iBegin == -1)	//ZZZZZZ ZZZZZ
+			if (iBegin == -1)	
 			{
 				alV.Add(v);
 				return; 
@@ -1178,30 +1164,29 @@ namespace Go_WinApp
 				if (iEnd > 0)
 					strOneVal = v.Substring(iBegin, iEnd-iBegin);
 				else 
-					strOneVal = v.Substring(iBegin);	//ZZZ ZZZZ ZZZZZ
+					strOneVal = v.Substring(iBegin);	
 				alV.Add(strOneVal);
 				iBegin = v.IndexOf("[", iBegin+1);
 				if (iBegin > 0)
-					iBegin ++;	//ZZZ ZZ ZZZ ZZZZZ ZZ ZZZZ ZZZZZ
+					iBegin ++;
 			}
 		}
 	}
 
 	/**
-	 * ZZZ ZZZZZZ ZZ Z ZZ ZZZZ.
-	 * ZZZZ ZZ ZZZ ZZZZ ZZ ZZZ ZZZZ ZZZZ, ZZ ZZZZZ Z ZZZZZ ZZ ZZZZZZZZZZ. 
+	 * 历史棋步树 为什么是棵树？？？？
 	 */
 
 	public class GoTree 
 	{
-		GameInfo _gi;		//ZZZZZ ZZZ ZZZZ'Z ZZZZZZZ ZZZZ.
-		ArrayList _vars;		//ZZZZZZZZZZ. 
-		int _currVarId;		//ZZ ZZ ZZZZZZZ ZZZZZZZZZ.
+		GameInfo _gi;		//游戏信息
+		ArrayList _vars;		//没用过
+		int _currVarId;		//没用过
 		int _currVarNum;
-		GoVariation _currVar;		//ZZZZZZZ ZZZZZZZZZZZ.
+		GoVariation _currVar;		//历史信息
 		string	_stGameComment;
 
-		// ZZZZZZZZZZZ - ZZZZZZ ZZZ ZZZZZZ ZZZZZ ZZ ZZZZZ ZZZZZZ
+		// 构造类啊
 		public GoTree(string s)
 		{
 			_vars = new ArrayList(10);
@@ -1212,7 +1197,7 @@ namespace Go_WinApp
 			parseFile(s);
 		}
 
-		//	ZZZZZZZZZZZ - ZZZZZZ ZZ ZZZZZ ZZZZZZ
+		//	默认构造类
 		public GoTree()
 		{
 			_vars = new ArrayList(10);
@@ -1236,7 +1221,7 @@ namespace Go_WinApp
 		}
 
 		/**
-		 * ZZZZZ ZZZ ZZZZZ ZZZZ ZZ Z ZZZZZZ. 
+		 * 分析文件
 		 */
 		Boolean parseFile(String goStr) 
 		{
@@ -1248,8 +1233,8 @@ namespace Go_WinApp
 				else 
 					iBeg = goStr.IndexOf(";", iEnd);
 				iEnd = goStr.IndexOf(";", iBeg+1);
-				if (iEnd < 0) //ZZ ZZZZ ";"
-					iEnd = goStr.LastIndexOf(")", goStr.Length);		//ZZZ ZZZZ ZZZZZZZ ZZZZZZ ZZ ZZZZZZZZ ZZ ")"
+				if (iEnd < 0) 
+					iEnd = goStr.LastIndexOf(")", goStr.Length);	
 				if (iBeg >= 0 && iEnd > iBeg) 
 				{
 					string section = goStr.Substring(iBeg+1, iEnd-iBeg-1);
@@ -1260,7 +1245,6 @@ namespace Go_WinApp
 			}
 			return true;
 		}
-
         /// <ZZZZZZZ>
         /// ZZZZ ZZZ ZZZZZ ZZ ZZZ ZZ ZZZZZ ZZZZZZ,
         /// ZZZZZZZ ZZ'Z ZZZ "]" ZZZZ,  
